@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Centro Médico Viver Bem | Consultas, Ultrassonografias e Exames em Petrópolis - RJ</title>
+    <meta name="description" content="Centro Médico Viver Bem em Petrópolis - RJ. Consultas com mais de 20 especialidades, ultrassonografias e exames laboratoriais. Cuidar é nossa especialidade, seu bem-estar é nossa missão. Agende: (24) 98847-7924." />
+    <meta name="keywords" content="centro médico petrópolis, ultrassonografia petrópolis, exames laboratoriais posse, consulta médica petrópolis, clínica posse rj" />
+    <meta name="theme-color" content="#1C2B92" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Centro Médico Viver Bem | Petrópolis - RJ" />
+    <meta property="og:description" content="Consultas, ultrassonografias e exames laboratoriais em um único lugar. Cuidar é nossa especialidade, seu bem-estar é nossa missão." />
+    <meta property="og:locale" content="pt_BR" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Centro Médico Viver Bem | Petrópolis - RJ" />
+    <meta name="twitter:description" content="Consultas, ultrassonografias e exames laboratoriais em um único lugar." />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Montserrat:wght@500;600;700&family=Great+Vibes&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Schema.org: clínica local -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "MedicalClinic",
+        "name": "Centro Médico Viver Bem",
+        "telephone": "+55 24 98847-7924",
+        "email": "centromedicoviverbem@hotmail.com",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Estrada União e Indústria, 32.771 - Posse",
+          "addressLocality": "Petrópolis",
+          "addressRegion": "RJ",
+          "addressCountry": "BR"
+        },
+        "openingHours": "Mo-Fr 07:30-18:00"
+      }
+    </script>
+  </head>
+  <body>
+    <!-- TEMP E2E: polyfill de rAF para testes em aba suspensa (remover após verificação) -->
+    <script>
+      if (new URLSearchParams(location.search).has('e2e')) {
+        window.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 16);
+        window.cancelAnimationFrame = (id) => clearTimeout(id);
+      }
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
