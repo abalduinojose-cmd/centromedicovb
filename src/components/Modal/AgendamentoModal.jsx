@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   FaArrowLeft, FaArrowRight, FaCalendarAlt, FaCheck, FaClock, FaExclamationCircle,
-  FaFlask, FaStethoscope, FaTimes, FaUser, FaUserMd, FaWhatsapp,
+  FaFlask, FaPlus, FaStethoscope, FaTimes, FaTrashAlt, FaUser, FaUserMd, FaWhatsapp,
 } from 'react-icons/fa';
 import Calendario from './Calendario.jsx';
 import { useAgendamento } from '../../context/AgendamentoContext.jsx';
@@ -12,9 +12,9 @@ import { examesAgendaveis } from '../../data/exames.js';
 import { gerarHorarios } from '../../utils/horarios.js';
 import { formatarDataLonga, mascaraTelefone } from '../../utils/formatacao.js';
 import { validarNome, validarTelefone, validarEmail, validarPaciente } from '../../utils/validacao.js';
-import { gerarLinkWhatsApp, mensagemConsulta, mensagemExame, WHATSAPP_DISPLAY } from '../../utils/whatsapp.js';
+import { gerarLinkWhatsApp, mensagemAgendamentos, WHATSAPP_DISPLAY } from '../../utils/whatsapp.js';
 
-const PASSOS = ['Tipo', 'Data', 'Horário', 'Seus dados', 'Confirmação'];
+const PASSOS = ['Tipo', 'Data', 'Horário', 'Sua lista', 'Seus dados', 'Confirmação'];
 
 const FORM_INICIAL = { nome: '', telefone: '', email: '', primeiraVez: false, observacoes: '' };
 
@@ -27,25 +27,51 @@ function CampoErro({ mensagem }) {
   );
 }
 
+/** Monta a descrição de um item do carrinho para exibição e WhatsApp. */
+function detalharItem(item) {
+  if (item.tipo === 'consulta') {
+    const esp = especialidades.find((e) => e.id === item.especialidadeId)?.nome ?? '';
+    const medico =
+      item.medicoId === 'equipe'
+        ? 'Equipe Viver Bem (profissional a confirmar)'
+        : medicos.find((m) => String(m.id) === item.medicoId)?.nome ?? '';
+    return { categoria: 'Consulta Médica', especialidade: esp, medico, dataFormatada: formatarDataLonga(item.data), horario: item.hora };
+  }
+  const exame = examesAgendaveis.find((e) => e.id === item.exameId)?.nome ?? '';
+  return { categoria: 'Exame', exame, dataFormatada: formatarDataLonga(item.data), horario: item.hora };
+}
+
 export default function AgendamentoModal() {
   const { modalAberto, tipoInicial, preSelecao, fecharAgendamento, confirmarEnvio } = useAgendamento();
 
   const [passo, setPasso] = useState(0);
+  const [itens, setItens] = useState([]);
+  // Item em construção
   const [tipo, setTipo] = useState('consulta');
   const [especialidadeId, setEspecialidadeId] = useState('');
   const [medicoId, setMedicoId] = useState('');
   const [exameId, setExameId] = useState('');
   const [data, setData] = useState('');
   const [hora, setHora] = useState('');
+  // Dados do paciente
   const [form, setForm] = useState(FORM_INICIAL);
   const [erros, setErros] = useState({});
   const [aceite, setAceite] = useState(false);
   const [tentouAvancar, setTentouAvancar] = useState(false);
 
+  const limparSelecao = () => {
+    setEspecialidadeId('');
+    setMedicoId('');
+    setExameId('');
+    setData('');
+    setHora('');
+  };
+
   // Reinicia o fluxo sempre que o modal abre (com pré-seleções vindas dos CTAs)
   useEffect(() => {
     if (modalAberto) {
       setPasso(0);
+      setItens([]);
       setTipo(tipoInicial);
       setEspecialidadeId(preSelecao?.especialidade ?? '');
       setMedicoId(preSelecao?.medicoId ? String(preSelecao.medicoId) : '');
@@ -75,19 +101,10 @@ export default function AgendamentoModal() {
     () => (especialidadeId ? medicosPorEspecialidade(especialidadeId) : []),
     [especialidadeId]
   );
-  const medicoSelecionado =
-    medicoId === 'equipe'
-      ? { nome: 'Equipe Viver Bem (profissional a confirmar)' }
-      : medicos.find((m) => String(m.id) === medicoId);
-  const exameSelecionado = examesAgendaveis.find((e) => e.id === exameId);
   const recursoId = tipo === 'consulta' ? `medico-${medicoId}` : `exame-${exameId}`;
+  const horarios = useMemo(() => (data ? gerarHorarios(recursoId, data) : []), [recursoId, data]);
+  const dataFormatada = formatarDataLonga(data);
 
-  const horarios = useMemo(
-    () => (data ? gerarHorarios(recursoId, data) : []),
-    [recursoId, data]
-  );
-
-  // Validação por passo
   const passoValido = useMemo(() => {
     switch (passo) {
       case 0:
@@ -97,32 +114,60 @@ export default function AgendamentoModal() {
       case 2:
         return Boolean(hora);
       case 3:
-        return Object.keys(validarPaciente(form)).length === 0;
+        return itens.length > 0;
       case 4:
+        return Object.keys(validarPaciente(form)).length === 0;
+      case 5:
         return aceite;
       default:
         return false;
     }
-  }, [passo, tipo, especialidadeId, medicoId, exameId, data, hora, form, aceite]);
+  }, [passo, tipo, especialidadeId, medicoId, exameId, data, hora, itens, form, aceite]);
 
   const avancar = () => {
     setTentouAvancar(true);
-    if (passo === 3) {
+    if (passo === 4) {
       const e = validarPaciente(form);
       setErros(e);
       if (Object.keys(e).length) return;
     }
     if (!passoValido) return;
     setTentouAvancar(false);
+
+    if (passo === 2) {
+      // Horário escolhido: adiciona o item à lista e mostra o carrinho
+      setItens((lista) => [
+        ...lista,
+        { id: Date.now(), tipo, especialidadeId, medicoId, exameId, data, hora },
+      ]);
+      limparSelecao();
+      setPasso(3);
+      return;
+    }
     setPasso((p) => Math.min(p + 1, PASSOS.length - 1));
   };
 
   const voltar = () => {
     setTentouAvancar(false);
+    if (passo === 0 && itens.length > 0) {
+      // Estava adicionando mais um item: volta para a lista sem adicionar
+      limparSelecao();
+      setPasso(3);
+      return;
+    }
     setPasso((p) => Math.max(p - 1, 0));
   };
 
-  // Validação em tempo real (debounce leve por campo)
+  const adicionarOutro = () => {
+    setTentouAvancar(false);
+    limparSelecao();
+    setTipo('consulta');
+    setPasso(0);
+  };
+
+  const removerItem = (id) => setItens((lista) => lista.filter((i) => i.id !== id));
+
+  // Validação em tempo real por campo
   const atualizarCampo = (campo, valor) => {
     const v = campo === 'telefone' ? mascaraTelefone(valor) : valor;
     setForm((f) => ({ ...f, [campo]: v }));
@@ -133,27 +178,16 @@ export default function AgendamentoModal() {
     }
   };
 
-  const dataFormatada = formatarDataLonga(data);
-
   const enviarWhatsApp = () => {
-    if (!aceite) return;
-    const base = {
+    setTentouAvancar(true);
+    if (!aceite || itens.length === 0) return;
+    const mensagem = mensagemAgendamentos({
       paciente: form.nome.trim(),
-      dataFormatada,
-      horario: hora,
       telefone: form.telefone,
       primeiraVez: form.primeiraVez,
       observacoes: form.observacoes.trim(),
-    };
-    const mensagem =
-      tipo === 'consulta'
-        ? mensagemConsulta({
-            ...base,
-            especialidade: especialidades.find((e) => e.id === especialidadeId)?.nome ?? '',
-            medico: medicoSelecionado?.nome ?? '',
-          })
-        : mensagemExame({ ...base, exame: exameSelecionado?.nome ?? '' });
-
+      itens: itens.map(detalharItem),
+    });
     window.open(gerarLinkWhatsApp(mensagem), '_blank', 'noopener');
     confirmarEnvio();
   };
@@ -193,6 +227,7 @@ export default function AgendamentoModal() {
                 </h2>
                 <p className="text-xs text-white/70">
                   Passo {passo + 1} de {PASSOS.length} — {PASSOS[passo]}
+                  {itens.length > 0 && ` · ${itens.length} na lista`}
                 </p>
               </div>
               <button
@@ -231,6 +266,11 @@ export default function AgendamentoModal() {
                   {/* PASSO 1 — Tipo + seleção */}
                   {passo === 0 && (
                     <div>
+                      {itens.length > 0 && (
+                        <p className="mb-4 rounded-xl bg-rose-soft px-4 py-3 text-sm text-text-dark/75">
+                          ➕ Adicionando o <strong>{itens.length + 1}º agendamento</strong> à sua lista.
+                        </p>
+                      )}
                       <div className="grid grid-cols-2 gap-3" role="tablist" aria-label="Tipo de agendamento">
                         {[
                           { id: 'consulta', label: 'Consulta Médica', Icone: FaStethoscope },
@@ -294,11 +334,7 @@ export default function AgendamentoModal() {
                                     }`}
                                   >
                                     {m.foto ? (
-                                      <img
-                                        src={m.foto}
-                                        alt=""
-                                        className="h-12 w-12 shrink-0 rounded-full object-cover object-top"
-                                      />
+                                      <img src={m.foto} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover object-top" />
                                     ) : (
                                       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-navy font-display text-sm font-bold text-white">
                                         {m.nome.replace(/^(Dra?\.|Psic\.|Nut\.|Ft\.|Prof\.ª|Pod\.)\s*/i, '')[0]}
@@ -419,8 +455,66 @@ export default function AgendamentoModal() {
                     </div>
                   )}
 
-                  {/* PASSO 4 — Dados do paciente */}
+                  {/* PASSO 4 — Lista de agendamentos (carrinho) */}
                   {passo === 3 && (
+                    <div>
+                      <p className="font-display text-sm font-semibold text-navy">
+                        Sua lista de agendamentos ({itens.length})
+                      </p>
+                      <p className="mt-1 mb-4 text-xs text-text-dark/50">
+                        Você pode agendar quantas consultas e exames quiser — tudo será enviado de uma vez.
+                      </p>
+
+                      <div className="space-y-3">
+                        {itens.map((item, i) => {
+                          const det = detalharItem(item);
+                          const ehConsulta = item.tipo === 'consulta';
+                          return (
+                            <motion.div
+                              key={item.id}
+                              initial={{ opacity: 0, y: 12 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex items-start gap-4 rounded-2xl border border-gray-divider bg-rose-soft/50 p-4"
+                            >
+                              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white ${ehConsulta ? 'bg-navy' : 'bg-brand-red'}`}>
+                                {ehConsulta ? <FaStethoscope size={17} aria-hidden /> : <FaFlask size={17} aria-hidden />}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-display text-sm font-bold text-navy">
+                                  {i + 1}. {ehConsulta ? det.especialidade : det.exame}
+                                </p>
+                                {ehConsulta && <p className="text-xs text-text-dark/60 truncate">{det.medico}</p>}
+                                <p className="mt-1 text-xs font-medium text-text-dark/75">
+                                  📅 {det.dataFormatada} · 🕐 {det.horario}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => removerItem(item.id)}
+                                aria-label={`Remover agendamento ${i + 1}`}
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-text-dark/40 transition-colors hover:bg-brand-red hover:text-white cursor-pointer"
+                              >
+                                <FaTrashAlt size={13} aria-hidden />
+                              </button>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        onClick={adicionarOutro}
+                        className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-navy/30 py-3.5 font-display text-sm font-semibold text-navy transition-colors hover:border-navy hover:bg-navy/[0.04] cursor-pointer"
+                      >
+                        <FaPlus size={12} aria-hidden /> Adicionar outra consulta ou exame
+                      </button>
+
+                      {itens.length === 0 && (
+                        <CampoErro mensagem="Sua lista está vazia — adicione ao menos um agendamento." />
+                      )}
+                    </div>
+                  )}
+
+                  {/* PASSO 5 — Dados do paciente */}
+                  {passo === 4 && (
                     <div className="space-y-4">
                       <p className="flex items-center gap-2 font-display text-sm font-semibold text-navy">
                         <FaUser className="text-brand-red" aria-hidden /> Informações do paciente
@@ -497,18 +591,35 @@ export default function AgendamentoModal() {
                     </div>
                   )}
 
-                  {/* PASSO 5 — Revisão e confirmação */}
-                  {passo === 4 && (
+                  {/* PASSO 6 — Revisão e confirmação */}
+                  {passo === 5 && (
                     <div>
-                      <p className="mb-4 font-display text-sm font-semibold text-navy">Revise seu agendamento</p>
-                      <div className="space-y-3 rounded-2xl border border-gray-divider bg-rose-soft/60 p-5">
+                      <p className="mb-4 font-display text-sm font-semibold text-navy">
+                        Revise seus {itens.length > 1 ? `${itens.length} agendamentos` : 'dados de agendamento'}
+                      </p>
+
+                      <div className="space-y-3">
+                        {itens.map((item, i) => {
+                          const det = detalharItem(item);
+                          return (
+                            <div key={item.id} className="rounded-2xl border border-gray-divider bg-rose-soft/60 p-4">
+                              <p className="font-display text-xs font-bold uppercase tracking-wider text-brand-red">
+                                {itens.length > 1 ? `Agendamento ${i + 1} — ` : ''}{det.categoria}
+                              </p>
+                              <p className="mt-1.5 font-display text-sm font-bold text-navy">
+                                {det.especialidade ?? det.exame}
+                                {det.medico ? ` · ${det.medico}` : ''}
+                              </p>
+                              <p className="mt-1 text-sm text-text-dark/75">
+                                📅 {det.dataFormatada} · 🕐 {det.horario}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="mt-4 space-y-2 rounded-2xl border border-gray-divider p-4">
                         {[
-                          tipo === 'consulta'
-                            ? ['Especialidade', especialidades.find((e) => e.id === especialidadeId)?.nome]
-                            : ['Exame', exameSelecionado?.nome],
-                          ...(tipo === 'consulta' ? [['Profissional', medicoSelecionado?.nome]] : []),
-                          ['Data', dataFormatada],
-                          ['Horário', hora],
                           ['Paciente', form.nome],
                           ['Telefone', form.telefone],
                           ['E-mail', form.email],
@@ -517,7 +628,7 @@ export default function AgendamentoModal() {
                         ].map(([rotulo, valor]) => (
                           <div key={rotulo} className="flex items-start justify-between gap-4 text-sm">
                             <span className="shrink-0 font-medium text-text-dark/50">{rotulo}</span>
-                            <span className="text-right font-semibold text-navy">{valor}</span>
+                            <span className="text-right font-semibold text-navy break-words">{valor}</span>
                           </div>
                         ))}
                       </div>
@@ -545,12 +656,14 @@ export default function AgendamentoModal() {
 
             {/* Rodapé com navegação */}
             <div className="flex items-center justify-between gap-3 border-t border-gray-divider bg-gray-support/60 px-6 py-4">
-              {passo > 0 ? (
+              {passo === 3 ? (
+                <span className="text-xs text-text-dark/40">📞 Dúvidas? {WHATSAPP_DISPLAY}</span>
+              ) : passo > 0 || itens.length > 0 ? (
                 <button
                   onClick={voltar}
                   className="flex items-center gap-2 rounded-full px-5 py-2.5 font-display text-sm font-semibold text-navy transition-colors hover:bg-navy/5 cursor-pointer"
                 >
-                  <FaArrowLeft size={12} aria-hidden /> Voltar
+                  <FaArrowLeft size={12} aria-hidden /> {passo === 0 ? 'Minha lista' : 'Voltar'}
                 </button>
               ) : (
                 <span className="text-xs text-text-dark/40">📞 Dúvidas? {WHATSAPP_DISPLAY}</span>
@@ -563,16 +676,13 @@ export default function AgendamentoModal() {
                   onClick={avancar}
                   className="flex items-center gap-2 rounded-full bg-navy px-7 py-3 font-display text-sm font-semibold text-white shadow-card transition-colors hover:bg-navy-light cursor-pointer"
                 >
-                  Continuar <FaArrowRight size={12} aria-hidden />
+                  {passo === 2 ? 'Adicionar à lista' : 'Continuar'} <FaArrowRight size={12} aria-hidden />
                 </motion.button>
               ) : (
                 <motion.button
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => {
-                    setTentouAvancar(true);
-                    enviarWhatsApp();
-                  }}
+                  onClick={enviarWhatsApp}
                   className="flex items-center gap-2 rounded-full bg-whatsapp px-7 py-3 font-display text-sm font-semibold text-white shadow-[0_8px_24px_rgba(37,211,102,0.4)] transition-all hover:brightness-110 cursor-pointer"
                 >
                   <FaWhatsapp size={17} aria-hidden /> Confirmar e Enviar para WhatsApp
