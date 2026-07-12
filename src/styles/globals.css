@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+/*
+ * Paleta oficial Centro Médico Viver Bem
+ * Azul marinho corporativo, vermelho vibrante e rosa acolhimento.
+ */
+@theme {
+  --color-navy: #1c2b92;
+  --color-navy-dark: #141f6b;
+  --color-navy-light: #2d3fb5;
+  --color-brand-red: #e60b18;
+  --color-brand-red-dark: #c00915;
+  --color-rose: #ffbdb9;
+  --color-rose-light: #ffe6e4;
+  --color-rose-soft: #fff3f2;
+  --color-gray-support: #f5f5f5;
+  --color-gray-divider: #e8e8e8;
+  --color-text-dark: #2c3e50;
+  --color-whatsapp: #25d366;
+
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-accent: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-script: "Great Vibes", cursive;
+
+  --shadow-soft: 0 4px 24px rgba(28, 43, 146, 0.08);
+  --shadow-card: 0 8px 32px rgba(28, 43, 146, 0.12);
+  --shadow-elevated: 0 16px 48px rgba(28, 43, 146, 0.18);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 132px;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text-dark);
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+}
+
+/* Focus visível para acessibilidade (WCAG 2.1 AA) */
+:focus-visible {
+  outline: 3px solid var(--color-navy);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--color-navy);
+  color: #fff;
+}
+
+/* Scrollbar sutil */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+::-webkit-scrollbar-thumb {
+  background: #c7cdea;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-navy-light);
+}
+
+/* Animação do botão WhatsApp flutuante */
+@keyframes pulse-whatsapp {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 18px rgba(37, 211, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+.animate-pulse-whatsapp {
+  animation: pulse-whatsapp 2.2s infinite;
+}
+
+/* Padrão de cruzes sutis (referência das artes do Instagram) */
+.bg-cross-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M36 24h8v8h8v8h-8v8h-8v-8h-8v-8h8z' fill='%23ffffff' fill-opacity='0.025'/%3E%3C/svg%3E");
+}
+.bg-cross-pattern-rose {
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M36 24h8v8h8v8h-8v8h-8v-8h-8v-8h8z' fill='%23e60b18' fill-opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* Input padrão do sistema de agendamento */
+.input-field {
+  width: 100%;
+  border: 1.5px solid var(--color-gray-divider);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  color: var(--color-text-dark);
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-field:hover {
+  border-color: #c7cdea;
+}
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-navy);
+  box-shadow: 0 0 0 4px rgba(28, 43, 146, 0.1);
+}
+.input-field.input-error {
+  border-color: var(--color-brand-red);
+  box-shadow: 0 0 0 4px rgba(230, 11, 24, 0.08);
+}
+
+/* Esconde scrollbar horizontal em carrosséis touch */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
