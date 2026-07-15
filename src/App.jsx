@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { AgendamentoProvider } from './context/AgendamentoContext.jsx';
+import PainelAdmin from './admin/PainelAdmin.jsx';
 import Navbar from './components/Navbar.jsx';
 import Hero from './components/Hero.jsx';
 import Ultrassonografia from './components/Ultrassonografia.jsx';
@@ -14,6 +16,16 @@ import AgendamentoModal from './components/Modal/AgendamentoModal.jsx';
 import SuccessModal from './components/Modal/SuccessModal.jsx';
 
 export default function App() {
+  // Rota por hash: #/admin abre o Painel da Recepção (funciona em qualquer hospedagem)
+  const [hash, setHash] = useState(() => window.location.hash);
+  useEffect(() => {
+    const onHash = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  if (hash.startsWith('#/admin')) return <PainelAdmin />;
+
   return (
     <AgendamentoProvider>
       <Navbar />

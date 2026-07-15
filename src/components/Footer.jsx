@@ -85,8 +85,11 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto px-4 md:px-6 py-6 text-center text-xs text-white/50">
+        <div className="mx-auto flex flex-col items-center gap-1 px-4 md:px-6 py-6 text-center text-xs text-white/50 sm:flex-row sm:justify-between">
           <p>© 2026 Centro Médico Viver Bem. Todos os direitos reservados.</p>
+          <a href="#/admin" className="text-white/30 transition-colors hover:text-white/70">
+            Área da recepção
+          </a>
         </div>
       </div>
     </footer>
