@@ -1,6 +1,7 @@
 ﻿import { motion } from 'framer-motion';
-import { FaCalendarCheck, FaFlask, FaStar } from 'react-icons/fa';
+import { FaFlask, FaStar } from 'react-icons/fa';
 import Button from './ui/Button.jsx';
+import CtaAgendar from './ui/CtaAgendar.jsx';
 import { useAgendamento } from '../context/AgendamentoContext.jsx';
 
 const container = {
@@ -52,10 +53,10 @@ export default function Hero() {
             que você precisa para cuidar da sua saúde em um só lugar.
           </motion.p>
 
-          <motion.div variants={item} className="mt-9 flex flex-wrap gap-4">
-            <Button variante="vermelho" onClick={() => abrirAgendamento('consulta')} className="text-base px-8">
-              <FaCalendarCheck aria-hidden /> Agendar Consulta Agora
-            </Button>
+          <motion.div variants={item} className="mt-9 flex flex-wrap items-center gap-4">
+            <CtaAgendar tamanho="lg" onClick={() => abrirAgendamento('consulta')}>
+              Agendar Consulta Agora
+            </CtaAgendar>
             <Button variante="branco" onClick={() => abrirAgendamento('exame')} className="text-base px-8">
               <FaFlask aria-hidden /> Agendar Exame
             </Button>

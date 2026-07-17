@@ -1,7 +1,9 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { FaStethoscope } from 'react-icons/fa';
 import Button from './ui/Button.jsx';
 import SectionTitle from './ui/SectionTitle.jsx';
+import { IconeAgendamento } from './ui/CtaAgendar.jsx';
 import { medicos, medicosDestaque } from '../data/medicos.js';
 import { especialidades } from '../data/especialidades.js';
 import { useAgendamento } from '../context/AgendamentoContext.jsx';
@@ -12,33 +14,57 @@ const AREAS_EXTRA = { ultrassonografia: 'Ultrassonografia' };
 const nomeEspecialidade = (id) =>
   especialidades.find((e) => e.id === id)?.nome ?? AREAS_EXTRA[id] ?? id;
 
-const primeiroNome = (nome) =>
-  nome.replace(/^(Dra?\.|Psic\.|Nut\.|Ft\.|Prof\.ª|Pod\.)\s*/i, '').split(' ')[0];
+const semTitulo = (nome) => nome.replace(/^(Dra?\.|Psic\.|Nut\.|Ft\.|Prof\.ª|Pod\.)\s*/i, '');
+const primeiroNome = (nome) => semTitulo(nome).split(' ')[0];
+const iniciais = (nome) =>
+  semTitulo(nome).split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
 
-/** Avatar: foto real quando disponível; senão, iniciais. */
-function Avatar({ nome, foto }) {
-  if (foto) {
-    return (
-      <img
-        src={foto}
-        alt={`Foto de ${nome}`}
-        loading="lazy"
-        className="mx-auto h-[110px] w-[110px] rounded-full object-cover object-top ring-4 ring-rose-light shadow-card"
-      />
-    );
-  }
-  const iniciais = nome
-    .replace(/^(Dra?\.|Psic\.|Nut\.|Ft\.|Prof\.ª|Pod\.)\s*/i, '')
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join('')
-    .toUpperCase();
+function CardProfissional({ medico, indice, aoAgendar }) {
   return (
-    <div className="mx-auto flex h-[110px] w-[110px] items-center justify-center rounded-full bg-gradient-to-br from-navy to-navy-light text-3xl font-display font-bold text-white ring-4 ring-rose-light shadow-card">
-      {iniciais}
-    </div>
+    <motion.article
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.5, delay: (indice % 4) * 0.07 }}
+      className="group flex w-full flex-col overflow-hidden rounded-3xl border border-gray-divider bg-white shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:border-navy/15 hover:shadow-elevated sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] xl:w-[calc(20%-19.2px)]"
+    >
+      {/* Retrato */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-navy to-navy-light">
+        {medico.foto ? (
+          <img
+            src={medico.foto}
+            alt={`Foto de ${medico.nome}`}
+            loading="lazy"
+            className="h-full w-full object-cover object-top transition-transform duration-[900ms] ease-out group-hover:scale-[1.05]"
+          />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center font-display text-5xl font-bold text-white/80">
+            {iniciais(medico.nome)}
+          </span>
+        )}
+        {/* Véu inferior para a etiqueta respirar sobre qualquer foto */}
+        <span aria-hidden className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-navy/65 via-navy/20 to-transparent" />
+        <span className="absolute bottom-3 left-3 right-3 truncate rounded-full bg-white/95 px-3 py-1 text-center font-accent text-[10.5px] font-bold uppercase tracking-wider text-brand-red shadow-soft backdrop-blur-sm">
+          {nomeEspecialidade(medico.especialidade)}
+        </span>
+      </div>
+
+      {/* Identificação */}
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="font-display text-[15px] font-bold leading-snug text-navy">{medico.nome}</h3>
+        <p className="mt-2 flex items-start gap-2 text-[12.5px] leading-relaxed text-text-dark/60">
+          <FaStethoscope className="mt-0.5 shrink-0 text-navy/30" size={11} aria-hidden />
+          <span className="line-clamp-2">{medico.bio}</span>
+        </p>
+        <button
+          onClick={aoAgendar}
+          className="mt-5 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full border border-navy/15 font-display text-[12.5px] font-semibold text-navy transition-colors duration-300 hover:border-transparent hover:bg-navy hover:text-white cursor-pointer"
+        >
+          <IconeAgendamento size={12} aria-hidden />
+          Agendar com {primeiroNome(medico.nome)}
+        </button>
+      </div>
+    </motion.article>
   );
 }
 
@@ -64,30 +90,15 @@ export default function Equipe() {
           descricao="Nossa equipe é composta por profissionais especializados, prontos para oferecer o melhor cuidado para você e sua família."
         />
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Flex centralizado: a última linha fica equilibrada em qualquer quantidade */}
+        <div className="flex flex-wrap justify-center gap-6">
           {lista.map((medico, i) => (
-            <motion.article
+            <CardProfissional
               key={medico.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: (i % 3) * 0.1 }}
-              whileHover={{ y: -8 }}
-              className="rounded-3xl border border-gray-divider bg-white p-8 text-center shadow-soft transition-shadow duration-300 hover:shadow-elevated"
-            >
-              <Avatar nome={medico.nome} foto={medico.foto} />
-              <h3 className="mt-5 font-display text-lg font-bold text-navy">{medico.nome}</h3>
-              <p className="mt-1 font-accent text-sm font-semibold text-brand-red">
-                {nomeEspecialidade(medico.especialidade)}
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-text-dark/60">{medico.bio}</p>
-              <button
-                onClick={() => agendarCom(medico)}
-                className="mt-5 w-full rounded-full border-2 border-navy py-2.5 font-display text-sm font-semibold text-navy transition-colors duration-200 hover:bg-navy hover:text-white cursor-pointer"
-              >
-                Agendar com {primeiroNome(medico.nome)}
-              </button>
-            </motion.article>
+              medico={medico}
+              indice={i}
+              aoAgendar={() => agendarCom(medico)}
+            />
           ))}
         </div>
 

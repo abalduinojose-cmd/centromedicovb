@@ -39,3 +39,4 @@ export const MODELO_MENSAGEM_PAGAMENTO =
   'Equipe {{Clinica}}.';
 
 export const SENHA_PAINEL = 'viverbem2026';
+export const SENHA_GESTOR = 'gestor2026';

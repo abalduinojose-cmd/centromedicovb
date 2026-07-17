@@ -8,7 +8,7 @@ import Calendario from './Calendario.jsx';
 import { useAgendamento } from '../../context/AgendamentoContext.jsx';
 import { especialidades } from '../../data/especialidades.js';
 import { medicos, medicosPorEspecialidade } from '../../data/medicos.js';
-import { examesAgendaveis } from '../../data/exames.js';
+import { categoriasAgendaveis, examesAgendaveis } from '../../data/exames.js';
 import { gerarHorarios } from '../../utils/horarios.js';
 import { formatarDataLonga, mascaraTelefone } from '../../utils/formatacao.js';
 import { validarNome, validarTelefone, validarEmail, validarPaciente } from '../../utils/validacao.js';
@@ -380,16 +380,13 @@ export default function AgendamentoModal() {
                           </label>
                           <select id="sel-exame" className="input-field" value={exameId} onChange={(e) => setExameId(e.target.value)}>
                             <option value="">Escolha um exame...</option>
-                            <optgroup label="Exames Laboratoriais">
-                              {examesAgendaveis.filter((e) => e.categoria === 'Laboratorial').map((e) => (
-                                <option key={e.id} value={e.id}>{e.nome}</option>
-                              ))}
-                            </optgroup>
-                            <optgroup label="Ultrassonografias">
-                              {examesAgendaveis.filter((e) => e.categoria === 'Ultrassonografia').map((e) => (
-                                <option key={e.id} value={e.id}>{e.nome}</option>
-                              ))}
-                            </optgroup>
+                            {categoriasAgendaveis.map((cat) => (
+                              <optgroup key={cat} label={cat}>
+                                {examesAgendaveis.filter((e) => e.categoria === cat).map((e) => (
+                                  <option key={e.id} value={e.id}>{e.nome}</option>
+                                ))}
+                              </optgroup>
+                            ))}
                           </select>
                         </div>
                       )}

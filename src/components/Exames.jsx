@@ -1,6 +1,7 @@
 ﻿import { motion } from 'framer-motion';
 import { FaFlask, FaMicroscope, FaTint, FaVial, FaVials, FaNotesMedical } from 'react-icons/fa';
 import Button from './ui/Button.jsx';
+import FadeIn from './ui/FadeIn.jsx';
 import SectionTitle from './ui/SectionTitle.jsx';
 import { examesLaboratoriais } from '../data/exames.js';
 import { useAgendamento } from '../context/AgendamentoContext.jsx';
@@ -23,8 +24,24 @@ export default function Exames() {
         <SectionTitle
           etiqueta="Realize seu exame de sangue conosco"
           titulo="Exames Laboratoriais de Precisão"
-          descricao="Coleta rápida, ambiente acolhedor e resultados confiáveis para o acompanhamento completo da sua saúde. Exames realizados pelo laboratório Labmed São Camilo."
+          descricao="Coleta rápida, ambiente acolhedor e resultados confiáveis para o acompanhamento completo da sua saúde."
         />
+
+        {/* Selo da parceria: a logo é o elemento dominante, com bastante ar em volta */}
+        <FadeIn delay={0.1} className="-mt-3 mb-12 flex justify-center md:-mt-5 md:mb-16">
+          <div className="flex flex-col items-center gap-4 rounded-3xl border border-gray-divider bg-white px-10 py-7 shadow-card sm:flex-row sm:gap-8 sm:px-12 sm:py-8">
+            <span className="max-w-[150px] text-center font-accent text-[11px] font-semibold uppercase leading-[1.5] tracking-[0.12em] text-text-dark/45 sm:text-right">
+              Exames realizados em parceria com
+            </span>
+            <span className="h-px w-16 bg-gray-divider sm:h-16 sm:w-px" aria-hidden />
+            <img
+              src="img/logo-sao-camilo.png"
+              alt="Clínica São Camilo"
+              loading="lazy"
+              className="h-20 w-auto sm:h-24"
+            />
+          </div>
+        </FadeIn>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {examesLaboratoriais.map((exame, i) => {

@@ -1,5 +1,6 @@
-import { FaEnvelope, FaInstagram, FaMapMarkerAlt, FaWhatsapp } from 'react-icons/fa';
+import { FaEnvelope, FaExternalLinkAlt, FaFacebookF, FaInstagram, FaMapMarkerAlt, FaWhatsapp } from 'react-icons/fa';
 import Logo from './ui/Logo.jsx';
+import { RECURSOS } from '../config.js';
 import { LINK_WHATSAPP_GERAL, WHATSAPP_DISPLAY } from '../utils/whatsapp.js';
 
 const LINKS_RAPIDOS = [
@@ -8,6 +9,8 @@ const LINKS_RAPIDOS = [
   { href: '#ultrassonografia', label: 'Ultrassonografia' },
   { href: '#equipe', label: 'Equipe' },
   { href: '#contato', label: 'Contato' },
+  // Institucional: abre em aba própria para não tirar o visitante do fluxo
+  { href: '#/quem-somos', label: 'Quem Somos', novaAba: true },
 ];
 
 export default function Footer() {
@@ -28,8 +31,13 @@ export default function Footer() {
           <ul className="mt-5 space-y-3">
             {LINKS_RAPIDOS.map((l) => (
               <li key={l.href}>
-                <a href={l.href} className="text-sm text-white/70 transition-colors duration-200 hover:text-white">
+                <a
+                  href={l.href}
+                  {...(l.novaAba ? { target: '_blank', rel: 'noopener' } : {})}
+                  className="inline-flex items-center gap-2 text-sm text-white/70 transition-colors duration-200 hover:text-white"
+                >
                   {l.label}
+                  {l.novaAba && <FaExternalLinkAlt size={9} aria-hidden className="text-white/35" />}
                 </a>
               </li>
             ))}
@@ -80,6 +88,15 @@ export default function Footer() {
             >
               <FaInstagram size={18} />
             </a>
+            <a
+              href="https://www.facebook.com/profile.php?id=100063486104649"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Facebook"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 transition-all duration-200 hover:bg-brand-red hover:scale-110"
+            >
+              <FaFacebookF size={16} />
+            </a>
           </div>
         </div>
       </div>
@@ -87,9 +104,11 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex flex-col items-center gap-1 px-4 md:px-6 py-6 text-center text-xs text-white/50 sm:flex-row sm:justify-between">
           <p>© 2026 Centro Médico Viver Bem. Todos os direitos reservados.</p>
-          <a href="#/admin" className="text-white/30 transition-colors hover:text-white/70">
-            Área da recepção
-          </a>
+          {RECURSOS.paineis && (
+            <a href="#/admin" className="text-white/30 transition-colors hover:text-white/70">
+              Área da recepção
+            </a>
+          )}
         </div>
       </div>
     </footer>

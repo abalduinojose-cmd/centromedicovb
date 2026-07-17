@@ -83,3 +83,21 @@ export function mensagemExame({ paciente, exame, dataFormatada, horario, telefon
 export const LINK_WHATSAPP_GERAL = gerarLinkWhatsApp(
   'Olá! Vim pelo site do Centro Médico Viver Bem e gostaria de mais informações. 😊'
 );
+
+/**
+ * Mensagem dos CTAs quando o agendamento online está desligado
+ * (modo institucional): o contexto do clique vira texto pronto no WhatsApp.
+ */
+export function mensagemInteresse({ tipo, especialidade, medico, exame }) {
+  const alvo = medico
+    ? `uma consulta com ${medico}${especialidade ? ` (${especialidade})` : ''}`
+    : especialidade
+      ? `uma consulta de ${especialidade}`
+      : exame
+        ? `o exame de ${exame}`
+        : tipo === 'exame'
+          ? 'um exame'
+          : 'uma consulta';
+
+  return `Olá! Vim pelo site do Centro Médico Viver Bem e gostaria de agendar ${alvo}. Poderiam me informar os horários disponíveis? 😊`;
+}

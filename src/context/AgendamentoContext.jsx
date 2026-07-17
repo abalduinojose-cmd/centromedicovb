@@ -1,4 +1,9 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { RECURSOS } from '../config.js';
+import { especialidades } from '../data/especialidades.js';
+import { examesAgendaveis } from '../data/exames.js';
+import { medicos } from '../data/medicos.js';
+import { gerarLinkWhatsApp, mensagemInteresse } from '../utils/whatsapp.js';
 
 /**
  * Contexto global do fluxo de agendamento.
@@ -13,6 +18,17 @@ export function AgendamentoProvider({ children }) {
   const [sucessoAberto, setSucessoAberto] = useState(false);
 
   const abrirAgendamento = useCallback((tipo = 'consulta', selecao = null) => {
+    // Modo institucional: o CTA leva direto ao WhatsApp, já com o contexto do clique.
+    if (!RECURSOS.agendamentoOnline) {
+      const mensagem = mensagemInteresse({
+        tipo,
+        especialidade: especialidades.find((e) => e.id === selecao?.especialidade)?.nome,
+        medico: medicos.find((m) => String(m.id) === String(selecao?.medicoId))?.nome,
+        exame: examesAgendaveis.find((e) => e.id === selecao?.exameId)?.nome,
+      });
+      window.open(gerarLinkWhatsApp(mensagem), '_blank', 'noopener');
+      return;
+    }
     setTipoInicial(tipo);
     setPreSelecao(selecao);
     setModalAberto(true);
